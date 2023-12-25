@@ -1,10 +1,19 @@
 .canvasPart {
   position: relative;
   width: 100%;
-  aspect-ratio: 16/7;
+  height: calc(100vw * 7 / 16);
+  min-height: 500px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .canvasWrapper {
   width: 100%;
   position: absolute;
+}
+
+canvas {
+  width: 100%;
+  aspect-ratio: 16/7;
 }

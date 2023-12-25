@@ -4,8 +4,8 @@ body {
   min-height: 100vh;
   justify-content: center;
   align-items: center;
-  background-color: red;
-  color: white;
+  background-color: white;
+  color: black;
 }
 
 #root {
