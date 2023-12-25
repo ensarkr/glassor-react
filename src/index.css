@@ -1,0 +1,14 @@
+body {
+  margin: 0;
+  display: flex;
+  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+  background-color: red;
+  color: white;
+}
+
+#root {
+  flex: 1;
+  min-height: 100vh;
+}

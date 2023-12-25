@@ -1,0 +1,12 @@
+.main {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+canvas {
+  width: 100%;
+  aspect-ratio: 16/7;
+}
