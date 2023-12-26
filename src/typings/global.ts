@@ -1,10 +1,9 @@
 type layer = "image" | "mask";
 
-type action =
-  | { type: "transferImageData"; to: layer; rect: rect }
-  | { type: "layerSwitch"; to: layer }
-  | { type: "brushSize"; incrementValue: number }
-  | { type: "zoom"; incrementValue: number };
+type action = { type: "transferImageData"; to: layer; rect: rect };
+// | { type: "layerSwitch"; to: layer }
+// | { type: "brushSize"; incrementValue: number }
+// | { type: "zoom"; incrementValue: number };
 
 type coord = { x: number; y: number };
 

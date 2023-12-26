@@ -1,8 +1,96 @@
+main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 70vw;
+  background-color: #d9d9d9;
+  height: min-content;
+  border-radius: 5px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+input[type="file"] {
+  display: none;
+}
+input[type="color"] {
+  position: absolute;
+  z-index: -5;
+  visibility: hidden;
+}
+button {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: 5px;
+  font-size: 17px;
+  cursor: pointer;
+  height: 40px;
+  min-width: 40px;
+}
+
+.fileInput {
+  cursor: pointer;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: 5px;
+  padding: 0 15px;
+  font-size: 17px;
+  gap: 10px;
+  background-color: #f0f0f0;
+  height: 40px;
+}
+
+.colorInput {
+  cursor: pointer;
+  display: flex;
+  border-radius: 5px;
+  height: 40px;
+  aspect-ratio: 1;
+  border: 1px solid none;
+}
+
+.topBar,
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 15px;
+  gap: 13px;
+  flex-wrap: wrap;
+}
+
+.tabs {
+  display: flex;
+  gap: 13px;
+  align-items: flex-end;
+}
+
+.tabBar {
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  border: 1px solid #d9d9d9;
+  font-size: 17px;
+}
+
+.tabBarActive {
+  border: 1px solid black;
+}
+
 .canvasPart {
   position: relative;
   width: 100%;
-  height: calc(100vw * 7 / 16);
-  min-height: 500px;
+  height: calc(70vw * 7 / 16);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -11,6 +99,29 @@
 .canvasWrapper {
   width: 100%;
   position: absolute;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  align-items: center;
+  height: 100%;
+  position: relative;
+}
+
+.toolbarLeft {
+  display: flex;
+  justify-content: flex-start;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.toolbarRight {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  flex-wrap: wrap;
 }
 
 canvas {

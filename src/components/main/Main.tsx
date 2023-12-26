@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./main.module.css";
-import { CanvasLogic } from "../../libs/Canvas";
+import { CanvasLogic } from "../../libs/CanvasLogic";
 import { layer } from "../../typings/global";
+import minusPNG from "../../assets/minus-regular-24.png";
+import plusPNG from "../../assets/plus-regular-24.png";
+import undoPNG from "../../assets/undo-regular-24.png";
+import redoPNG from "../../assets/redo-regular-24.png";
+import zoomInPNG from "../../assets/zoom-in-regular-24.png";
+import zoomOutPNG from "../../assets/zoom-out-regular-24.png";
+import downloadPNG from "../../assets/download-regular-24.png";
+import uploadImagePNG from "../../assets/image-alt-regular-24.png";
+import tutorialPNG from "../../assets/tutorial.png";
 
 export default function ImagePart() {
   const imageRef = useRef<HTMLCanvasElement>(null!);
@@ -15,6 +24,9 @@ export default function ImagePart() {
   const imageWrapperRef = useRef<HTMLDivElement>(null!);
   const maskWrapperRef = useRef<HTMLDivElement>(null!);
 
+  const tutorialRef = useRef<HTMLImageElement>(null!);
+  const tutorialLoaded = useRef(false);
+
   const canvasRef = useRef<CanvasLogic>(null!);
 
   const [brushSize, setBrushSize] = useState(15);
@@ -24,6 +36,11 @@ export default function ImagePart() {
     height: number;
     width: number;
   } | null>(null);
+
+  const [background, setBackground] = useState<"image" | "color">("image");
+  const [color, setColor] = useState("#fff");
+
+  const [isUploaded, setIsUploaded] = useState(false);
 
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -59,6 +76,42 @@ export default function ImagePart() {
     }
   };
 
+  const handleShortcuts = (e: KeyboardEvent) => {
+    if (e.key === "x") {
+      setCurrentLayer((pv) => {
+        updateScrollPositions(pv === "image" ? "mask" : "image");
+        canvasRef.current.changeLayer(pv === "image" ? "mask" : "image");
+        return pv === "image" ? "mask" : "image";
+      });
+    }
+
+    if (e.key === "z" && e.ctrlKey) {
+      canvasRef.current.History.undo();
+    }
+
+    if (e.key === "y" && e.ctrlKey) {
+      canvasRef.current.History.redo();
+    }
+
+    if (e.key === "+" && !e.ctrlKey) {
+      setScale((pv) => pv + 0.25);
+    }
+
+    if (e.key === "-" && !e.ctrlKey) {
+      setScale((pv) => (pv - 0.25 >= 1 ? pv - 0.25 : 1));
+    }
+
+    if (e.key === "+" && e.ctrlKey) {
+      e.preventDefault();
+      setBrushSize(canvasRef.current.increaseBrushSize());
+    }
+
+    if (e.key === "-" && e.ctrlKey) {
+      e.preventDefault();
+      setBrushSize(canvasRef.current.decreaseBrushSize());
+    }
+  };
+
   const uploadImage = async () => {
     if (
       fileRef.current === null ||
@@ -71,7 +124,25 @@ export default function ImagePart() {
 
     if (!file.type.startsWith("image")) return;
 
+    setIsUploaded(true);
     canvasRef.current.drawImage(file);
+  };
+
+  const downloadImage = async () => {
+    const canvasUrl = imageRef.current.toDataURL();
+    const anchor = document.createElement("a");
+    anchor.href = canvasUrl;
+
+    anchor.download = "transparent image";
+
+    anchor.click();
+    anchor.remove();
+  };
+
+  const switchLayer = (to: layer) => {
+    updateScrollPositions(to);
+    setCurrentLayer(to);
+    canvasRef.current.changeLayer(to);
   };
 
   useEffect(() => {
@@ -96,44 +167,73 @@ export default function ImagePart() {
       orgContextRef.current
     );
 
+    if (tutorialLoaded.current) {
+      canvasRef.current.drawImage(null, tutorialRef.current);
+    } else {
+      tutorialRef.current.onload = () => {
+        canvasRef.current.drawImage(null, tutorialRef.current);
+      };
+    }
+
     window.addEventListener("resize", reSize);
+    document.addEventListener("keydown", handleShortcuts);
 
     return () => {
       window.removeEventListener("resize", reSize);
+      document.removeEventListener("keydown", handleShortcuts);
       canvasRef.current.clearEventListeners();
     };
   }, []);
 
   return (
-    <>
-      <div>
-        <input
-          type="file"
-          ref={fileRef}
-          accept=".png , .jpg"
-          onChange={uploadImage}
-        ></input>
+    <main>
+      <img
+        src={tutorialPNG}
+        ref={tutorialRef}
+        style={{ display: "none" }}
+        onLoad={() => {
+          tutorialLoaded.current = true;
+        }}
+      ></img>
+      <div className={styles.topBar}>
+        <label className={styles.fileInput}>
+          <input
+            type="file"
+            ref={fileRef}
+            accept=".png , .jpg"
+            onChange={uploadImage}
+          ></input>
+          {isUploaded ? (
+            "Image uploaded."
+          ) : (
+            <>
+              <img src={uploadImagePNG}></img> Click to upload an image.
+            </>
+          )}
+        </label>
 
-        <button
-          type="button"
-          onClick={() => {
-            updateScrollPositions("image");
-            setCurrentLayer("image");
-            canvasRef.current.changeLayer("image");
-          }}
-        >
-          image
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            updateScrollPositions("mask");
-            setCurrentLayer("mask");
-            canvasRef.current.changeLayer("mask");
-          }}
-        >
-          mask
-        </button>
+        <div className={styles.tabs}>
+          <button
+            className={[
+              styles.tabBar,
+              currentLayer === "image" && styles.tabBarActive,
+            ].join(" ")}
+            type="button"
+            onClick={() => switchLayer("image")}
+          >
+            image
+          </button>
+          <button
+            className={[
+              styles.tabBar,
+              currentLayer === "mask" && styles.tabBarActive,
+            ].join(" ")}
+            type="button"
+            onClick={() => switchLayer("mask")}
+          >
+            mask
+          </button>
+        </div>
       </div>
       <div className={styles.canvasPart}>
         <div
@@ -147,7 +247,15 @@ export default function ImagePart() {
           }}
         >
           <canvas
-            style={getScaledDimensions()}
+            style={{
+              ...getScaledDimensions(),
+              ...(background === "image"
+                ? {
+                    backgroundImage: "url(/background.jpg)",
+                    backgroundRepeat: "repeat",
+                  }
+                : { backgroundColor: color }),
+            }}
             ref={imageRef}
             id="imageLayer"
           ></canvas>
@@ -163,66 +271,119 @@ export default function ImagePart() {
           }}
         >
           <canvas
-            style={getScaledDimensions()}
+            style={{
+              ...getScaledDimensions(),
+              ...(background === "image"
+                ? {
+                    backgroundImage: "url(/background.jpg)",
+                    backgroundRepeat: "repeat",
+                  }
+                : { backgroundColor: color }),
+            }}
             ref={maskRef}
             id="maskLayer"
           ></canvas>
         </div>
+        <div
+          className={styles.canvasWrapper}
+          style={{
+            ...originalDimensions,
+            opacity: 1,
+            zIndex: -1,
+          }}
+        ></div>
+
         <canvas style={{ display: "none" }} ref={orgRef}></canvas>
       </div>
       <div className={styles.toolbar}>
-        <>
-          <button
-            type="button"
-            onClick={() => {
-              canvasRef.current.History.undo();
-            }}
-          >
-            undo
+        <div className={styles.toolbarLeft}>
+          <div className={styles.buttonGroup}>
+            <button
+              type="button"
+              onClick={() => canvasRef.current.History.undo()}
+            >
+              <img src={undoPNG}></img>
+            </button>
+            <button
+              type="button"
+              onClick={() => canvasRef.current.History.redo()}
+            >
+              <img src={redoPNG}></img>
+            </button>
+          </div>
+
+          <div className={styles.buttonGroup}>
+            <button
+              type="button"
+              onClick={() => setBrushSize(canvasRef.current.resetBrushSize())}
+            >
+              {brushSize}px
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setBrushSize(canvasRef.current.decreaseBrushSize())
+              }
+            >
+              <img src={minusPNG}></img>
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setBrushSize(canvasRef.current.increaseBrushSize())
+              }
+            >
+              <img src={plusPNG}></img>
+            </button>
+          </div>
+
+          <div className={styles.buttonGroup}>
+            <button type="button" onClick={() => setScale(1)}>
+              {scale}x
+            </button>
+            <button
+              type="button"
+              onClick={() => setScale((pv) => (pv - 0.25 >= 1 ? pv - 0.25 : 1))}
+            >
+              <img src={zoomOutPNG}></img>
+            </button>
+            <button type="button" onClick={() => setScale((pv) => pv + 0.25)}>
+              <img src={zoomInPNG}></img>
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.toolbarRight}>
+          <div className={styles.buttonGroup}>
+            <button
+              style={{
+                backgroundImage: "url(/background.jpg)",
+              }}
+              type="button"
+              onClick={() => setBackground("image")}
+            ></button>
+
+            <label
+              className={styles.colorInput}
+              style={{
+                backgroundColor: color,
+              }}
+            >
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => {
+                  setBackground("color");
+                  setColor(e.target.value);
+                }}
+              ></input>
+            </label>
+          </div>
+          <button disabled={!isUploaded} type="button" onClick={downloadImage}>
+            <img src={downloadPNG}></img>
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              canvasRef.current.History.redo();
-            }}
-          >
-            redo
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setScale((pv) => (pv - 0.25 >= 1 ? pv - 0.25 : 1));
-            }}
-          >
-            -
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setScale((pv) => pv + 0.25);
-            }}
-          >
-            +
-          </button>
-        </>
-        <p>{brushSize}</p>
-        <button
-          type="button"
-          onClick={() => {
-            setBrushSize(canvasRef.current.decreaseBrushSize());
-          }}
-        >
-          -
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setBrushSize(canvasRef.current.increaseBrushSize());
-          }}
-        >
-          +
-        </button>
+        </div>
       </div>
-    </>
+    </main>
   );
 }

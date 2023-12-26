@@ -1,5 +1,5 @@
 import { coord, layer } from "../typings/global";
-import { CanvasHistory } from "./History";
+import { CanvasHistory } from "./CanvasHistory";
 
 class CanvasLogic {
   constructor(
@@ -23,9 +23,11 @@ class CanvasLogic {
   }
 
   private setIsPaintingTrue = (e: MouseEvent) => {
-    this.isPainting = true;
-    this.History.newAction();
-    this.transferPixels(e);
+    if (e.button === 0) {
+      this.isPainting = true;
+      this.History.newAction();
+      this.transferPixels(e);
+    }
   };
   private setIsPaintingFalse = () => {
     this.isPainting = false;
@@ -73,6 +75,14 @@ class CanvasLogic {
   private currentLayer: layer = "image";
 
   private brushSize: number = 15;
+
+  public getIsPainting() {
+    return this.isPainting;
+  }
+
+  public getCurrentLayer() {
+    return this.currentLayer;
+  }
 
   private getMousePosition = (event: MouseEvent) => {
     const rect =
@@ -166,6 +176,10 @@ class CanvasLogic {
     this.currentLayer = layer;
   }
 
+  public resetBrushSize() {
+    this.brushSize = 15;
+    return 15;
+  }
   public increaseBrushSize() {
     return ++this.brushSize;
   }
@@ -174,38 +188,44 @@ class CanvasLogic {
     return --this.brushSize;
   }
 
-  public async drawImage(file: File) {
-    const imageBitMap = await createImageBitmap(file);
+  public async drawImage(file: File | null, image?: HTMLImageElement) {
+    let imageData: ImageBitmap | HTMLImageElement;
 
-    if (imageBitMap.width > imageBitMap.height * this.aspectRatio) {
-      this.image.width = imageBitMap.width;
-      this.image.height = imageBitMap.width / this.aspectRatio;
+    if (image !== undefined) {
+      imageData = image;
+    } else if (image === undefined && file !== null)
+      imageData = await createImageBitmap(file);
+    else return;
+
+    if (imageData.width > imageData.height * this.aspectRatio) {
+      this.image.width = imageData.width;
+      this.image.height = imageData.width / this.aspectRatio;
       this.imageContext.drawImage(
-        imageBitMap,
+        imageData,
         0,
-        (this.image.height - imageBitMap.height) / 2
+        (this.image.height - imageData.height) / 2
       );
 
-      this.original.width = imageBitMap.width;
-      this.original.height = imageBitMap.width / this.aspectRatio;
+      this.original.width = imageData.width;
+      this.original.height = imageData.width / this.aspectRatio;
       this.originalContext.drawImage(
-        imageBitMap,
+        imageData,
         0,
-        (this.original.height - imageBitMap.height) / 2
+        (this.original.height - imageData.height) / 2
       );
     } else {
-      this.image.height = imageBitMap.height;
-      this.image.width = imageBitMap.height * this.aspectRatio;
+      this.image.height = imageData.height;
+      this.image.width = imageData.height * this.aspectRatio;
       this.imageContext.drawImage(
-        imageBitMap,
-        (this.image.width - imageBitMap.width) / 2,
+        imageData,
+        (this.image.width - imageData.width) / 2,
         0
       );
-      this.original.height = imageBitMap.height;
-      this.original.width = imageBitMap.height * this.aspectRatio;
+      this.original.height = imageData.height;
+      this.original.width = imageData.height * this.aspectRatio;
       this.originalContext.drawImage(
-        imageBitMap,
-        (this.original.width - imageBitMap.width) / 2,
+        imageData,
+        (this.original.width - imageData.width) / 2,
         0
       );
     }
@@ -214,8 +234,6 @@ class CanvasLogic {
     this.mask.width = this.image.width;
     this.maskContext.fillStyle = "rgba(0, 0, 0, 0)";
     this.maskContext.fillRect(0, 0, this.mask.width, this.mask.height);
-
-    imageBitMap.close();
   }
 }
 

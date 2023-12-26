@@ -1,5 +1,5 @@
 import { action } from "../typings/global";
-import { CanvasLogic } from "./Canvas";
+import { CanvasLogic } from "./CanvasLogic";
 
 class CanvasHistory {
   constructor(canvas: CanvasLogic) {
@@ -27,6 +27,8 @@ class CanvasHistory {
   }
 
   public undo() {
+    if (this.canvas.getIsPainting()) return;
+
     if (this.currentId === -1) return;
 
     for (let i = this.actions[this.currentId].length - 1; i >= 0; i--) {
@@ -37,6 +39,8 @@ class CanvasHistory {
   }
 
   public redo() {
+    if (this.canvas.getIsPainting()) return;
+
     if (this.actions[this.currentId + 1] === undefined) return;
 
     this.currentId++;
@@ -71,10 +75,6 @@ class CanvasHistory {
 
         return;
       }
-
-      case "layerSwitch":
-      case "brushSize":
-      case "zoom":
     }
   }
   public doOpposite(action: action) {
@@ -102,10 +102,6 @@ class CanvasHistory {
 
         return;
       }
-
-      case "layerSwitch":
-      case "brushSize":
-      case "zoom":
     }
   }
 }
