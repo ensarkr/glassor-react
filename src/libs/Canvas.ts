@@ -1,6 +1,7 @@
 import { coord, layer } from "../typings/global";
+import { CanvasHistory } from "./History";
 
-class Canvas {
+class CanvasLogic {
   constructor(
     image: HTMLCanvasElement,
     imageContext: CanvasRenderingContext2D,
@@ -21,8 +22,10 @@ class Canvas {
     this.addEventListeners();
   }
 
-  private setIsPaintingTrue = () => {
+  private setIsPaintingTrue = (e: MouseEvent) => {
     this.isPainting = true;
+    this.History.newAction();
+    this.transferPixels(e);
   };
   private setIsPaintingFalse = () => {
     this.isPainting = false;
@@ -64,6 +67,8 @@ class Canvas {
   private readonly original: HTMLCanvasElement;
   private readonly originalContext: CanvasRenderingContext2D;
 
+  public readonly History: CanvasHistory = new CanvasHistory(this);
+
   private isPainting: boolean = false;
   private currentLayer: layer = "image";
 
@@ -90,57 +95,70 @@ class Canvas {
     };
   };
 
+  public async drawToImage(topLeft: coord, brushSize: number) {
+    const imageData = this.originalContext.getImageData(
+      topLeft.x,
+      topLeft.y,
+      brushSize,
+      brushSize
+    );
+
+    this.imageContext.drawImage(
+      await createImageBitmap(imageData),
+      topLeft.x,
+      topLeft.y,
+      brushSize,
+      brushSize
+    );
+  }
+
+  public async drawToMask(topLeft: coord, brushSize: number) {
+    const imageData = this.originalContext.getImageData(
+      topLeft.x,
+      topLeft.y,
+      brushSize,
+      brushSize
+    );
+
+    this.maskContext.drawImage(
+      await createImageBitmap(imageData),
+      topLeft.x,
+      topLeft.y,
+      brushSize,
+      brushSize
+    );
+  }
+
+  public removeFromImage(topLeft: coord, brushSize: number) {
+    this.imageContext.clearRect(topLeft.x, topLeft.y, brushSize, brushSize);
+  }
+
+  public removeFromMask(topLeft: coord, brushSize: number) {
+    this.maskContext.clearRect(topLeft.x, topLeft.y, brushSize, brushSize);
+  }
+
   private transferPixels = async (event: MouseEvent) => {
     const pos = this.getMousePosition(event);
-
     const topLeft = this.getTopLeft(pos);
 
     if (this.currentLayer === "image") {
-      const imageData = this.originalContext.getImageData(
-        topLeft.x,
-        topLeft.y,
-        this.brushSize,
-        this.brushSize
-      );
-
-      this.maskContext.drawImage(
-        await createImageBitmap(imageData),
-        topLeft.x,
-        topLeft.y,
-        this.brushSize,
-        this.brushSize
-      );
-
-      this.imageContext.clearRect(
-        topLeft.x,
-        topLeft.y,
-        this.brushSize,
-        this.brushSize
-      );
+      this.drawToMask(topLeft, this.brushSize);
+      this.removeFromImage(topLeft, this.brushSize);
+      this.History.addAction({
+        type: "transferImageData",
+        to: "mask",
+        rect: { ...topLeft, height: this.brushSize, width: this.brushSize },
+      });
     }
 
     if (this.currentLayer === "mask") {
-      const imageData = this.originalContext.getImageData(
-        topLeft.x,
-        topLeft.y,
-        this.brushSize,
-        this.brushSize
-      );
-
-      this.imageContext.drawImage(
-        await createImageBitmap(imageData),
-        topLeft.x,
-        topLeft.y,
-        this.brushSize,
-        this.brushSize
-      );
-
-      this.maskContext.clearRect(
-        topLeft.x,
-        topLeft.y,
-        this.brushSize,
-        this.brushSize
-      );
+      this.drawToImage(topLeft, this.brushSize);
+      this.removeFromMask(topLeft, this.brushSize);
+      this.History.addAction({
+        type: "transferImageData",
+        to: "image",
+        rect: { ...topLeft, height: this.brushSize, width: this.brushSize },
+      });
     }
   };
 
@@ -201,4 +219,4 @@ class Canvas {
   }
 }
 
-export { Canvas };
+export { CanvasLogic };

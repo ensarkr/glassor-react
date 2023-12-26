@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./main.module.css";
-import { Canvas } from "../../libs/Canvas";
+import { CanvasLogic } from "../../libs/Canvas";
 import { layer } from "../../typings/global";
 
 export default function ImagePart() {
@@ -15,7 +15,7 @@ export default function ImagePart() {
   const imageWrapperRef = useRef<HTMLDivElement>(null!);
   const maskWrapperRef = useRef<HTMLDivElement>(null!);
 
-  const canvasRef = useRef<Canvas>(null!);
+  const canvasRef = useRef<CanvasLogic>(null!);
 
   const [brushSize, setBrushSize] = useState(15);
   const [currentLayer, setCurrentLayer] = useState<layer>("image");
@@ -87,7 +87,7 @@ export default function ImagePart() {
 
     updateOriginalDimensions();
 
-    canvasRef.current = new Canvas(
+    canvasRef.current = new CanvasLogic(
       imageRef.current,
       imageContextRef.current,
       maskRef.current,
@@ -172,6 +172,22 @@ export default function ImagePart() {
       </div>
       <div className={styles.toolbar}>
         <>
+          <button
+            type="button"
+            onClick={() => {
+              canvasRef.current.History.undo();
+            }}
+          >
+            undo
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              canvasRef.current.History.redo();
+            }}
+          >
+            redo
+          </button>
           <button
             type="button"
             onClick={() => {
