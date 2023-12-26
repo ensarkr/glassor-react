@@ -251,7 +251,7 @@ export default function ImagePart() {
               ...getScaledDimensions(),
               ...(background === "image"
                 ? {
-                    backgroundImage: "url(/background.jpg)",
+                    backgroundImage: "url(./background.jpg)",
                     backgroundRepeat: "repeat",
                   }
                 : { backgroundColor: color }),
@@ -275,7 +275,7 @@ export default function ImagePart() {
               ...getScaledDimensions(),
               ...(background === "image"
                 ? {
-                    backgroundImage: "url(/background.jpg)",
+                    backgroundImage: "url(./background.jpg)",
                     backgroundRepeat: "repeat",
                   }
                 : { backgroundColor: color }),
@@ -357,7 +357,7 @@ export default function ImagePart() {
           <div className={styles.buttonGroup}>
             <button
               style={{
-                backgroundImage: "url(/background.jpg)",
+                backgroundImage: "url(./background.jpg)",
               }}
               type="button"
               onClick={() => setBackground("image")}
